@@ -221,8 +221,7 @@ Factor</h1>
 imu预积分文档学习笔记，为gtsam基于切向量实现的imu预积分的理论基础。
 <span id="more"></span></p>
 <h2 id="导航状态">导航状态</h2>
-<p>定义导航状态为 <span
-class="math inline">\(X^n_b=\{R^n_b,P^n_b,V^n_b\}\)</span></p>
+<p>定义导航状态为 <span class="math inline">\(X^n_b=\{R^n_b,P^n_b,V^n_b\}\)</span></p>
 <ul>
 <li>上角标n：导航(navigation)坐标系</li>
 <li>下角标b：载体(body)坐标系</li>
@@ -248,12 +247,7 @@ t)]=\left[R(t)\left[\omega^{b}(t)\right]_{\times}, V(t), g+R(t)
 a^{b}(t)\right]
 \]</span></p>
 <h2 id="局部坐标">局部坐标</h2>
-<p>基于流形空间的优化基于局部坐标的概念。当初始位姿为<span
-class="math inline">\(R_0\)</span>，定义一个局部映射<span
-class="math inline">\(\Phi _{R_0}(\theta)\)</span> 从局部坐标 <span
-class="math inline">\(\theta\in \mathbb{R}^3\)</span> 映射到 <span
-class="math inline">\(R_0\)</span> 的邻域： <span
-class="math display">\[
+<p>基于流形空间的优化基于局部坐标的概念。当初始位姿为<span class="math inline">\(R_0\)</span>，定义一个局部映射<span class="math inline">\(\Phi _{R_0}(\theta)\)</span> 从局部坐标 <span class="math inline">\(\theta\in \mathbb{R}^3\)</span> 映射到 <span class="math inline">\(R_0\)</span> 的邻域： <span class="math display">\[
 \Phi_{R_{0}}(\theta)=R_{0} \exp \left([\theta]_{\times}\right)
 \]</span> 局部坐标系<span class="math inline">\(\theta\)</span>
 和切向量是同构的，定义<span class="math inline">\(\theta=\omega
@@ -263,36 +257,25 @@ R_{0} \exp \left([\omega t]_{\times}\right)}{d
 t}\right|_{t=0}=R_{0}[\omega]_{\times}
 \]</span></p>
 <ul>
-<li>原文这里有一个笔误，反对称矩阵里面应该没有<span
-class="math inline">\(t\)</span></li>
+<li>原文这里有一个笔误，反对称矩阵里面应该没有<span class="math inline">\(t\)</span></li>
 </ul>
-<p>因此，三维向量<span
-class="math inline">\(\omega\)</span>表示了在<span
-class="math inline">\(SO(3)\)</span>流形上的前进方向，但是仅在<span
-class="math inline">\(R_0\)</span>附近的局部坐标系上有效。</p>
-<p>类似的，可以定义在<span
-class="math inline">\(SE(3)\)</span>上的局部坐标 <span
-class="math inline">\(\xi=[\omega t, v t] \in
+<p>因此，三维向量<span class="math inline">\(\omega\)</span>表示了在<span class="math inline">\(SO(3)\)</span>流形上的前进方向，但是仅在<span class="math inline">\(R_0\)</span>附近的局部坐标系上有效。</p>
+<p>类似的，可以定义在<span class="math inline">\(SE(3)\)</span>上的局部坐标 <span class="math inline">\(\xi=[\omega t, v t] \in
 \mathbb{R}^{6}\)</span>与其对应的映射函数 <span class="math display">\[
 \Phi_{T_{0}}(\xi)=T_{0} \exp \hat{\xi}
 \]</span></p>
 <h2 id="局部坐标系映射的导数">局部坐标系映射的导数</h2>
-<p>定义一个<span
-class="math inline">\(3\times3\)</span>的雅克比矩阵模拟增量 <span
-class="math inline">\(\delta\)</span> 对局部坐标系的影响。 <span
-class="math display">\[
+<p>定义一个<span class="math inline">\(3\times3\)</span>的雅克比矩阵模拟增量 <span class="math inline">\(\delta\)</span> 对局部坐标系的影响。 <span class="math display">\[
 \Phi_{R_{0}}(\theta+\delta) \approx \Phi_{R_{0}}(\theta) \exp
 \left([H(\theta)
 \delta]_{\times}\right)=\Phi_{\Phi_{R_{0}}(\theta)}(H(\theta) \delta)
-\]</span> 这个雅克比的计算仅仅依赖<span
-class="math inline">\(\theta\)</span> <span class="math display">\[
+\]</span> 这个雅克比的计算仅仅依赖<span class="math inline">\(\theta\)</span> <span class="math display">\[
 H(\theta)=\sum_{k=0}^{\infty} \frac{(-1)^{k}}{(k+1)
 !}[\theta]_{\times}^{k}
 \]</span></p>
 <h2 id="局部坐标中的数值积分">局部坐标中的数值积分</h2>
 <p>对于问题<span class="math inline">\(\dot
-R(t)=F(R,t)\)</span>,我们将其解建模为<span
-class="math inline">\(R(t)=\Phi_{R_{0}}(\theta(t))\)</span></p>
+R(t)=F(R,t)\)</span>,我们将其解建模为<span class="math inline">\(R(t)=\Phi_{R_{0}}(\theta(t))\)</span></p>
 <p>定义 <span class="math display">\[
 \gamma(\delta)=R(t+\delta)=\Phi_{R_{0}}(\theta(t)+\dot{\theta}(t)
 \delta) \approx \Phi_{R(t)}(H(\theta) \dot{\theta}(t) \delta)
@@ -313,8 +296,7 @@ t, V_{0}+R_{0} a t\right\}
 \]</span></p>
 <ul>
 <li><span class="math inline">\(\zeta=[\omega t, v t, a t]\)</span></li>
-<li>在<span class="math inline">\(X_0\)</span>处的切向量为<span
-class="math inline">\(\left.\frac{d \mathcal{R}_{X_{0}}(\zeta)}{d
+<li>在<span class="math inline">\(X_0\)</span>处的切向量为<span class="math inline">\(\left.\frac{d \mathcal{R}_{X_{0}}(\zeta)}{d
 t}\right|_{t=0}=\left[R_{0}[\omega]_{\times}, R_{0} v, R_{0}
 a\right]\)</span></li>
 </ul>
@@ -323,20 +305,13 @@ a\right]\)</span></li>
 X(t)=\mathcal{R}_{X_{0}}(\zeta(t))=\left\{\Phi_{R_{0}}(\theta(t)),
 P_{0}+R_{0} p(t), V_{0}+R_{0} v(t)\right\}
 \]</span></p>
-<p>定义一个轨迹函数<span
-class="math inline">\(\gamma(\delta)\)</span>，自变量为时间的增量<span
-class="math inline">\(\delta\)</span>,每一个<span
-class="math inline">\(\delta\)</span>对应状态空间的条轨迹，<span
-class="math inline">\(\gamma(\delta)\)</span>表示轨迹簇，并在<span
-class="math inline">\(\delta=0\)</span>时通过X(t): <span
-class="math display">\[
+<p>定义一个轨迹函数<span class="math inline">\(\gamma(\delta)\)</span>，自变量为时间的增量<span class="math inline">\(\delta\)</span>,每一个<span class="math inline">\(\delta\)</span>对应状态空间的条轨迹，<span class="math inline">\(\gamma(\delta)\)</span>表示轨迹簇，并在<span class="math inline">\(\delta=0\)</span>时通过X(t): <span class="math display">\[
 \gamma(\delta)=X(t+\delta)=\left\{\Phi_{R_{0}}(\theta(t)+\dot{\theta}(t)
 \delta), P_{0}+R_{0}\{p(t)+\dot{p}(t) \delta\},
 V_{0}+R_{0}\{v(t)+\dot{v}(t) \delta\}\right\}
 \]</span></p>
 <ul>
-<li><span
-class="math inline">\(\Phi_{R_{0}}(\theta(t+\delta))=\Phi_{R_{0}}(\theta(t)+\dot{\theta}(t)
+<li><span class="math inline">\(\Phi_{R_{0}}(\theta(t+\delta))=\Phi_{R_{0}}(\theta(t)+\dot{\theta}(t)
 \delta)\)</span>
 <ul>
 <li>这一步骤是用一阶导数近似，后面两项相同</li>
@@ -352,15 +327,12 @@ class="math inline">\(\Phi_{R_{0}}(\theta(t+\delta))=\Phi_{R_{0}}(\theta(t)+\dot
 <h2 id="应用新的imu因子">应用：新的IMU因子</h2>
 <p>铺垫了这么多 终于进入核心内容了</p>
 <p>在Lupton 的论文(On-Manifold Preintegration for Real-Time
-Visual–Inertial Odometry)中，当不知道导航状态<span
-class="math inline">\(X_i\)</span>的状态时，无法对重力加速度进行补偿，因此吧速度拆成重力加速和比力两部分。</p>
+Visual–Inertial Odometry)中，当不知道导航状态<span class="math inline">\(X_i\)</span>的状态时，无法对重力加速度进行补偿，因此吧速度拆成重力加速和比力两部分。</p>
 <ul>
-<li>注：IMU测的加速度实际上是比力(Specific force)--<span
-class="math inline">\(f^b\)</span>
+<li>注：IMU测的加速度实际上是比力(Specific force)--<span class="math inline">\(f^b\)</span>
 <ul>
 <li><span class="math inline">\(f^b=R^b_n(a_{ii}^n-g^n)\)</span></li>
-<li>我们真正需要的加速度是相对于惯性系的线性加速度 <span
-class="math inline">\(a_{ii}^n=R^n_bf^b+g^n\)</span></li>
+<li>我们真正需要的加速度是相对于惯性系的线性加速度 <span class="math inline">\(a_{ii}^n=R^n_bf^b+g^n\)</span></li>
 <li>要对重力进行补偿就需要知道载体坐标系相对导航坐标系的相对位姿</li>
 </ul></li>
 </ul>
@@ -375,15 +347,13 @@ t}^{n}\left(f_{t}^{b}-b i a s_{f}^{o b s}\right)+g^{n}\right) d t=v_{t
 2}\left(R_{b t}^{b t 1}\left(f_{t}^{b}-b i a s_{f}^{o b s}\right)\right)
 d t
 \]</span></p>
-<p>​ 把原文这个式子左右两边同乘<span
-class="math inline">\(R^{bt1}_n\)</span>有 <span class="math display">\[
+<p>​ 把原文这个式子左右两边同乘<span class="math inline">\(R^{bt1}_n\)</span>有 <span class="math display">\[
 v_{t 2}^{bt 1}=v_{t 1}^{bt}+R^{bt1}_n\int_{t 1}^{t 2} g^{n} d t+ \int_{t
 1}^{t 2}\left(R_{b t}^{b t 1}\left(f_{t}^{b}-b i a s_{f}^{o b
 s}\right)\right) d t\tag{1}
 \]</span></p>
 <ul>
-<li><p>本文档的表达 <span
-class="math inline">\(v(t)=v_g(t)+v_a(t)\)</span></p>
+<li><p>本文档的表达 <span class="math inline">\(v(t)=v_g(t)+v_a(t)\)</span></p>
 <p>进一步的</p></li>
 </ul>
 <p><span class="math display">\[
@@ -405,8 +375,7 @@ s}\right)+g^{n}\right) d t^{2}= p_{t 1}^{n}+(t 2-t 1) v_{t
 2}\left(R_{b t}^{b t 1}\left(f_{t}^{b}-b i a s_{f}^{o b s}\right)\right)
 d t^{2}
 \]</span></p>
-<p>​ 把原文这个式子左右两边同乘<span
-class="math inline">\(R^{bt1}_n\)</span>有 <span class="math display">\[
+<p>​ 把原文这个式子左右两边同乘<span class="math inline">\(R^{bt1}_n\)</span>有 <span class="math display">\[
 p_{t 2}^{bt1}= p_{t 1}^{bt1}+(t 2-t 1) v_{t 1}^{bt1}+R_{n}^{bt1}\iint_{t
 1}^{t 2} g^{n} d t^{2}+ \iint_{t 1}^{t 2}\left(R_{b t}^{b t
 1}\left(f_{t}^{b}-b i a s_{f}^{o b s}\right)\right) d t^{2} \tag{2}
@@ -429,9 +398,7 @@ p_{t 2}^{bt1}= p_{t 1}^{bt1}+(t 2-t 1) v_{t 1}^{bt1}+R_{n}^{bt1}\iint_{t
 \dot{p}_{v}(t) &amp;=v_{a}(t) \\
 \dot{v}_{a}(t) &amp;=R_{b}^{i}(t) a^{b}(t)
 \end{aligned}
-\]</span> 从零开始，一直到时间<span
-class="math inline">\(t_{ij}\)</span>，有<span
-class="math inline">\(R_{b}^{i}(t)=\text{exp}([\theta(t)]_\times)\)</span>,用局部坐标向量表示为
+\]</span> 从零开始，一直到时间<span class="math inline">\(t_{ij}\)</span>，有<span class="math inline">\(R_{b}^{i}(t)=\text{exp}([\theta(t)]_\times)\)</span>,用局部坐标向量表示为
 <span class="math display">\[
 \zeta\left(t_{i j}\right)=\left[\theta\left(t_{i j}\right), p\left(t_{i
 j}\right), v\left(t_{i j}\right)\right]=\left[\theta\left(t_{i
@@ -472,27 +439,19 @@ v_{k+1} &amp;=v_{k}+R_{k} a_{k}^{b} \Delta_{t}
 \end{aligned}
 \]</span></p>
 <h2 id="噪声协方差矩阵传递">噪声(协方差矩阵)传递</h2>
-<p>定义<span class="math inline">\(t_k\)</span>时刻的导航状态为<span
-class="math inline">\(\zeta_k=[\theta_k,p_k,v_k]\)</span>， <span
-class="math display">\[
+<p>定义<span class="math inline">\(t_k\)</span>时刻的导航状态为<span class="math inline">\(\zeta_k=[\theta_k,p_k,v_k]\)</span>， <span class="math display">\[
 \zeta_{k+1}=f\left(\zeta_{k}, a_{k}^{b}, \omega_{k}^{b}\right)
 \]</span> 噪声的传递可以表达为 <span class="math display">\[
 \Sigma_{k+1}=A_{k} \Sigma_{k} A_{k}^{T}+B_{k}\Sigma_{\eta}^{a d}
 B_{k}+C_{k} \Sigma_{\eta}^{g d} C_{k}
 \]</span></p>
 <ul>
-<li><p><span class="math inline">\(\Sigma_{k+1}\)</span>: <span
-class="math inline">\(t_{k+1}\)</span>时刻的协方差矩阵，<span
-class="math inline">\(9\times9\)</span>大小</p></li>
-<li><p><span class="math inline">\(\Sigma_{k}\)</span>: <span
-class="math inline">\(t_{k}\)</span>时刻的协方差矩阵，<span
-class="math inline">\(9\times9\)</span>矩阵</p></li>
+<li><p><span class="math inline">\(\Sigma_{k+1}\)</span>: <span class="math inline">\(t_{k+1}\)</span>时刻的协方差矩阵，<span class="math inline">\(9\times9\)</span>大小</p></li>
+<li><p><span class="math inline">\(\Sigma_{k}\)</span>: <span class="math inline">\(t_{k}\)</span>时刻的协方差矩阵，<span class="math inline">\(9\times9\)</span>矩阵</p></li>
 <li><p><span class="math inline">\(\Sigma_{\eta}^{a
-d}\)</span>测量加速度引入的噪声，<span
-class="math inline">\(3\times3\)</span>矩阵</p></li>
+d}\)</span>测量加速度引入的噪声，<span class="math inline">\(3\times3\)</span>矩阵</p></li>
 <li><p><span class="math inline">\(\Sigma_{\eta}^{g
-d}\)</span>测量角速度引入的噪声，<span
-class="math inline">\(3\times3\)</span>矩阵</p></li>
+d}\)</span>测量角速度引入的噪声，<span class="math inline">\(3\times3\)</span>矩阵</p></li>
 <li><p><span class="math display">\[
 A_{k} \approx\left[\begin{array}{ccc}
 I_{3 \times 3}-\frac{\Delta_{t}}{2}\left[\omega_{k}^{b}\right]_{\times}
