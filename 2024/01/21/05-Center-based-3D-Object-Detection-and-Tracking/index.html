@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.0.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="论文阅读笔记 Center-based 3D Object Detection and Tracking 网络架构 先来看看看这个网络框架和检测流程  第一步,是将点云使用的3d检测头提取特征，这一步主干网络使用诸如VoxelNet或者PointPillars。 原始点云表示为\(N\times4\)，过特征提取后数据维度就是\(H\times W \times F\)的Map-View">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Center-based 3D Object Detection and Tracking 论文阅读">
+<meta property="og:url" content="http://example.com/2024/01/21/05-Center-based-3D-Object-Detection-and-Tracking/index.html">
+<meta property="og:site_name" content="南柯一梦">
+<meta property="og:description" content="论文阅读笔记 Center-based 3D Object Detection and Tracking 网络架构 先来看看看这个网络框架和检测流程  第一步,是将点云使用的3d检测头提取特征，这一步主干网络使用诸如VoxelNet或者PointPillars。 原始点云表示为\(N\times4\)，过特征提取后数据维度就是\(H\times W \times F\)的Map-View">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2024/01/21/05-Center-based-3D-Object-Detection-and-Tracking/01.png">
+<meta property="article:published_time" content="2024-01-21T12:05:53.000Z">
+<meta property="article:modified_time" content="2024-02-18T15:47:59.283Z">
+<meta property="article:author" content="南柯一梦">
+<meta property="article:tag" content="ICP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2024/01/21/05-Center-based-3D-Object-Detection-and-Tracking/01.png">
+
+<link rel="canonical" href="http://example.com/2024/01/21/05-Center-based-3D-Object-Detection-and-Tracking/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Center-based 3D Object Detection and Tracking 论文阅读 | 南柯一梦</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">南柯一梦</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2024/01/21/05-Center-based-3D-Object-Detection-and-Tracking/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="南柯一梦">
+      <meta itemprop="description" content="好记性不如烂笔头">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="南柯一梦">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Center-based 3D Object Detection and Tracking 论文阅读
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2024-01-21 20:05:53" itemprop="dateCreated datePublished" datetime="2024-01-21T20:05:53+08:00">2024-01-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2024-02-18 23:47:59" itemprop="dateModified" datetime="2024-02-18T23:47:59+08:00">2024-02-18</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Lidar-Detection/" itemprop="url" rel="index"><span itemprop="name">Lidar Detection</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="论文阅读笔记-center-based-3d-object-detection-and-tracking">论文阅读笔记
+Center-based 3D Object Detection and Tracking</h1>
+<h2 id="网络架构">网络架构</h2>
+<p>先来看看看这个网络框架和检测流程 <img src="/2024/01/21/05-Center-based-3D-Object-Detection-and-Tracking/01.png"></p>
+<p>第一步,是将点云使用的3d检测头提取特征，这一步主干网络使用诸如VoxelNet或者PointPillars。
+原始点云表示为<span class="math inline">\(N\times4\)</span>，过特征提取后数据维度就是<span class="math inline">\(H\times W \times F\)</span>的Map-View
+features。</p>
+<p>第二步，使用中心热图头（Center heatmap head），也就是文中的First
+stage得到的这样热图(heatmap)，数据维度为<span class="math inline">\(H\times W \times
+K\)</span>。这张图k个维度的每一层的局部极大值对应一类检测物体的中心点的位置。训练的时候每一个维度的真值为标注框的
+3D
+中心点投影到俯视图出形成的二高斯分布在该点处的值。当这个高斯半径小于2时就使用2作为高斯半径避免监督过于稀疏。文中提到这一个中心热图头由3*3
+convolutional layer, Batch Normalization, ReLU这三种构成。</p>
+<p>第三步，使用回归头：在每个中心点特征处回归子体素位置细化<span class="math inline">\(o\in\mathbb{R}^2\)</span>，离地高度<span class="math inline">\(h_g\)</span>，3D尺寸<span class="math inline">\(s\in\mathbb{R}^3\)</span>和朝向角<span class="math inline">\((\sin(\alpha),
+\cos(\alpha))\)</span>。子体素位置细化用于减小体素化和主干网络的步长带来的量化误差。以L1回归损失在真实物体中心进行监督。</p>
+<h2 id="代码阅读">代码阅读</h2>
+<p>这里选用Livox Detection V2.0进行阅读，该仓库具有以下特点： - 基于
+OpenPCDet框架构建。 - 该检测器的灵感来自于无锚点方法 CenterPoint</p>
+<h2 id="模型接口">模型接口</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">LD_base</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self</span>):</span><br><span class="line">        <span class="built_in">super</span>(LD_base, self).__init__()</span><br><span class="line">        self.voxel_size = [<span class="number">0.2</span>, <span class="number">0.2</span>, <span class="number">0.2</span>]</span><br><span class="line">        self.point_cloud_range = [<span class="number">0</span>, -<span class="number">44.8</span>, -<span class="number">2</span>, <span class="number">224</span>, <span class="number">44.8</span>, <span class="number">4</span>] </span><br><span class="line">        self.point_to_bev = BoolMap(self.point_cloud_range, voxel_size=self.voxel_size)</span><br><span class="line">        self.backbone = ResBEVBackboneConcat(<span class="number">30</span>)</span><br><span class="line">        self.head = CenterHead(input_channels=<span class="number">128</span>, </span><br><span class="line">                               num_class=<span class="number">3</span>, </span><br><span class="line">                               class_names=[<span class="string">&#x27;Vehicle&#x27;</span>, <span class="string">&#x27;Pedestrian&#x27;</span>, <span class="string">&#x27;Cyclist&#x27;</span>], </span><br><span class="line">                               point_cloud_range=self.point_cloud_range, </span><br><span class="line">                               voxel_size=self.voxel_size)</span><br><span class="line">        <span class="keyword">for</span> m <span class="keyword">in</span> self.modules():</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">isinstance</span>(m, nn.Conv2d):</span><br><span class="line">                nn.init.xavier_normal_(m.weight)</span><br><span class="line">                <span class="keyword">if</span> m.bias <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">                    nn.init.constant_(m.bias, <span class="number">0</span>)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, batch_dict</span>):</span><br><span class="line">        batch_dict = self.point_to_bev(batch_dict)</span><br><span class="line">        batch_dict = self.backbone(batch_dict)</span><br><span class="line">        batch_dict = self.head(batch_dict)</span><br><span class="line">        <span class="keyword">return</span> batch_dict[<span class="string">&#x27;final_box_dicts&#x27;</span>]</span><br></pre></td></tr></table></figure>
+<p>可以看到模型为三块，体素化<code>BoolMap</code>,
+主干网络，检测头。</p>
+<h2 id="点云体素化">点云体素化</h2>
+<p>首先看第一个类BoolMap,
+非常简单清晰，将所有的点换算为该点所在的体素的位置，并在bev_img中将该体素置为1。这样bev_img这样一个(B,C,H,W)维的tensor中，值为1表示该处有点，为0表示该处无点。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">BoolMap</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, point_cloud_range,voxel_size=[<span class="number">0.2</span>,<span class="number">0.2</span>,<span class="number">0.2</span>], **kwargs</span>):</span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        <span class="comment"># VOXEL SIZE</span></span><br><span class="line">        self.DX, self.DY, self.DZ = \</span><br><span class="line">            voxel_size[<span class="number">0</span>], voxel_size[<span class="number">1</span>],voxel_size[<span class="number">2</span>]</span><br><span class="line">        </span><br><span class="line">        <span class="comment"># ROI in meter</span></span><br><span class="line">        self.m_x_min = point_cloud_range[<span class="number">0</span>]</span><br><span class="line">        self.m_x_max = point_cloud_range[<span class="number">3</span>]</span><br><span class="line"></span><br><span class="line">        self.m_y_min = point_cloud_range[<span class="number">1</span>]</span><br><span class="line">        self.m_y_max = point_cloud_range[<span class="number">4</span>]</span><br><span class="line"></span><br><span class="line">        self.m_z_min = point_cloud_range[<span class="number">2</span>]</span><br><span class="line">        self.m_z_max = point_cloud_range[<span class="number">5</span>]</span><br><span class="line"></span><br><span class="line">        <span class="comment"># SIZE of BEV map</span></span><br><span class="line">        self.BEV_W = <span class="built_in">round</span>((point_cloud_range[<span class="number">3</span>]-point_cloud_range[<span class="number">0</span>])/self.DX)</span><br><span class="line">        self.BEV_H = <span class="built_in">round</span>((point_cloud_range[<span class="number">4</span>]-point_cloud_range[<span class="number">1</span>])/self.DY)</span><br><span class="line">        self.BEV_C = <span class="built_in">round</span>((point_cloud_range[<span class="number">5</span>]-point_cloud_range[<span class="number">2</span>])/self.DZ)</span><br><span class="line"></span><br><span class="line">        self.num_bev_features = self.BEV_C</span><br><span class="line">        </span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, batch_dict</span>):</span><br><span class="line">        pc_lidar = batch_dict[<span class="string">&#x27;points&#x27;</span>].clone() </span><br><span class="line"></span><br><span class="line">        <span class="comment">#将bev_img这个张量设置在显存上 使用GPU计算</span></span><br><span class="line">        bev_img = torch.cuda.BoolTensor(batch_dict[<span class="string">&#x27;batch_size&#x27;</span>],self.BEV_C,self.BEV_H,self.BEV_W).fill_(<span class="number">0</span>) </span><br><span class="line">        pc_lidar[:,<span class="number">1</span>]=((pc_lidar[:,<span class="number">1</span>]-self.m_x_min)/self.DX)</span><br><span class="line">        pc_lidar[:,<span class="number">2</span>]=((pc_lidar[:,<span class="number">2</span>]-self.m_y_min)/self.DY)</span><br><span class="line">        pc_lidar[:,<span class="number">3</span>]=((pc_lidar[:,<span class="number">3</span>]-self.m_z_min)/self.DZ)</span><br><span class="line">        pc_lidar = pc_lidar.trunc().long()</span><br><span class="line">        bev_img[pc_lidar[:,<span class="number">0</span>], pc_lidar[:,<span class="number">3</span>], pc_lidar[:,<span class="number">2</span>], pc_lidar[:,<span class="number">1</span>]] = <span class="number">1</span></span><br><span class="line">        bev_img = bev_img.<span class="built_in">float</span>() </span><br><span class="line">        batch_dict[<span class="string">&#x27;spatial_features&#x27;</span>] = bev_img</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> batch_dict</span><br></pre></td></tr></table></figure>
+<h2 id="主干网络">主干网络</h2>
+<p>主干网络部分选用的是ResNet深度残差网络。从注释看是移植自OpenPCDet。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">ResBEVBackboneConcat</span>(nn.Module):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">    Modified from the original implementation of BEV backbone in OpenPCDet.</span></span><br><span class="line"><span class="string">    &quot;&quot;&quot;</span>  </span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, </span></span><br><span class="line"><span class="params">                 input_channels,</span></span><br><span class="line"><span class="params">                 layer_nums=[<span class="number">2</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">3</span>, <span class="number">2</span>],            <span class="comment">#每一层中BottleNeck的数目</span></span></span><br><span class="line"><span class="params">                 layer_strides=[<span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>, <span class="number">2</span>],         <span class="comment">#每一层中卷积块的步长</span></span></span><br><span class="line"><span class="params">                 num_filters=[<span class="number">32</span>, <span class="number">48</span>, <span class="number">64</span>, <span class="number">96</span>, <span class="number">128</span>],     <span class="comment">#卷积块中的滤波器数量 输出通道数</span></span></span><br><span class="line"><span class="params">                 upsample_strides=[<span class="number">2</span>, <span class="number">4</span>, <span class="number">8</span>, <span class="number">16</span>, <span class="number">32</span>]</span>):   <span class="comment">#上采样层</span></span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        num_levels = <span class="built_in">len</span>(layer_nums)</span><br><span class="line">        c_in_list = [input_channels, *num_filters[:-<span class="number">1</span>]]</span><br><span class="line">        self.blocks = nn.ModuleList()</span><br><span class="line">        self.deblocks = nn.ModuleList()</span><br><span class="line">        <span class="keyword">for</span> idx <span class="keyword">in</span> <span class="built_in">range</span>(num_levels):</span><br><span class="line">            <span class="comment"># 卷积 BatchNorm ReLu 三合一</span></span><br><span class="line">            cur_layers = [</span><br><span class="line">                nn.ZeroPad2d(<span class="number">1</span>),</span><br><span class="line">                nn.Conv2d(</span><br><span class="line">                    c_in_list[idx], num_filters[idx], kernel_size=<span class="number">3</span>,</span><br><span class="line">                    stride=layer_strides[idx], padding=<span class="number">0</span>, bias=<span class="literal">False</span></span><br><span class="line">                ),</span><br><span class="line">                nn.BatchNorm2d(num_filters[idx], eps=<span class="number">1e-3</span>, momentum=<span class="number">0.01</span>),</span><br><span class="line">                nn.ReLU()</span><br><span class="line">            ]</span><br><span class="line">            <span class="comment"># 再累几层BottleNeck</span></span><br><span class="line">            <span class="keyword">for</span> k <span class="keyword">in</span> <span class="built_in">range</span>(layer_nums[idx]):</span><br><span class="line">                cur_layers.extend([BottleNeck(num_filters[idx], num_filters[idx])])</span><br><span class="line">            <span class="comment"># 一个完整层结束 添加到blocks中</span></span><br><span class="line">            self.blocks.append(nn.Sequential(*cur_layers))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(upsample_strides) &gt; <span class="number">0</span>:</span><br><span class="line">                self.deblocks.append(nn.Sequential(</span><br><span class="line">                    nn.UpsamplingBilinear2d(scale_factor=upsample_strides[idx]),</span><br><span class="line">                ))</span><br><span class="line"></span><br><span class="line">        self.fushion = nn.Sequential(</span><br><span class="line">            nn.Conv2d(<span class="built_in">sum</span>(num_filters), <span class="number">128</span>, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="number">128</span>),</span><br><span class="line">            nn.ReLU(inplace=<span class="literal">True</span>)</span><br><span class="line">        )</span><br><span class="line">        <span class="comment"># 用一个卷积加BN作为注意力机制</span></span><br><span class="line">        self.attention_w = nn.Sequential(</span><br><span class="line">            nn.Conv2d(<span class="number">128</span>, <span class="number">128</span>, kernel_size=<span class="number">1</span>, bias=<span class="literal">False</span>),</span><br><span class="line">            nn.BatchNorm2d(<span class="number">128</span>),</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        self.num_bev_features = <span class="number">128</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, batch_dict</span>):</span><br><span class="line">        spatial_features = batch_dict[<span class="string">&#x27;spatial_features&#x27;</span>]</span><br><span class="line">        ups = []</span><br><span class="line">        ret_dict = &#123;&#125;</span><br><span class="line">        x = spatial_features</span><br><span class="line">        <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="built_in">len</span>(self.blocks)):</span><br><span class="line">            x = self.blocks[i](x)</span><br><span class="line"></span><br><span class="line">            stride = <span class="built_in">int</span>(spatial_features.shape[<span class="number">2</span>] / x.shape[<span class="number">2</span>])</span><br><span class="line">            ret_dict[<span class="string">&#x27;spatial_features_%dx&#x27;</span> % stride] = x</span><br><span class="line">            <span class="keyword">if</span> <span class="built_in">len</span>(self.deblocks) &gt; <span class="number">0</span>:</span><br><span class="line">                ups.append(self.deblocks[i](x))</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                ups.append(x)</span><br><span class="line"></span><br><span class="line">        x = torch.cat(ups, dim=<span class="number">1</span>)</span><br><span class="line">        x = self.fushion(x)</span><br><span class="line">        w_x = torch.softmax(self.attention_w(x), dim=<span class="number">1</span>)</span><br><span class="line">        x = w_x * x</span><br><span class="line"></span><br><span class="line">        batch_dict[<span class="string">&#x27;spatial_features_2d&#x27;</span>] = x</span><br><span class="line">        <span class="keyword">return</span> batch_dict</span><br></pre></td></tr></table></figure>
+<h2 id="检测头">检测头</h2>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">CenterHead</span>(nn.Module):</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, data_dict</span>):</span><br><span class="line">        spatial_features_2d = data_dict[<span class="string">&#x27;spatial_features_2d&#x27;</span>]</span><br><span class="line">        <span class="comment"># 一个卷积层 从128维降到64维</span></span><br><span class="line">        x = self.shared_conv(spatial_features_2d)</span><br><span class="line"></span><br><span class="line">        pred_dicts = []</span><br><span class="line">        <span class="keyword">for</span> head <span class="keyword">in</span> self.heads_list:</span><br><span class="line">            pred_dicts.append(head(x))</span><br><span class="line">        </span><br><span class="line">        self.forward_ret_dict[<span class="string">&#x27;pred_dicts&#x27;</span>] = pred_dicts</span><br><span class="line"></span><br><span class="line">        pred_dicts = self.generate_predicted_boxes(</span><br><span class="line">            data_dict[<span class="string">&#x27;batch_size&#x27;</span>], pred_dicts</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line">        data_dict[<span class="string">&#x27;final_box_dicts&#x27;</span>] = pred_dicts</span><br><span class="line">        <span class="keyword">return</span> data_dict</span><br></pre></td></tr></table></figure>
+<p>其中 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">self.shared_conv = nn.Sequential(</span><br><span class="line">    nn.Conv2d(</span><br><span class="line">        input_channels, <span class="number">64</span>, <span class="number">3</span>, stride=<span class="number">1</span>, padding=<span class="number">1</span>,</span><br><span class="line">        bias=<span class="literal">True</span></span><br><span class="line">    ),</span><br><span class="line">    nn.BatchNorm2d(<span class="number">64</span>),</span><br><span class="line">    nn.ReLU(),</span><br><span class="line">)</span><br></pre></td></tr></table></figure> 分离头 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">SeparateHead</span>(nn.Module):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, input_channels, sep_head_dict, init_bias=-<span class="number">2.19</span>, use_bias=<span class="literal">False</span></span>):</span><br><span class="line">        <span class="comment"># sep_head_dict = &#123;</span></span><br><span class="line">        <span class="comment">#     &#x27;center&#x27;: &#123;&#x27;out_channels&#x27;:2, &#x27;num_conv&#x27;:1&#125;,</span></span><br><span class="line">        <span class="comment">#     &#x27;center_z&#x27;: &#123;&#x27;out_channels&#x27;:1, &#x27;num_conv&#x27;:1&#125;,</span></span><br><span class="line">        <span class="comment">#     &#x27;dim&#x27;: &#123;&#x27;out_channels&#x27;:3, &#x27;num_conv&#x27;:1&#125;,</span></span><br><span class="line">        <span class="comment">#     &#x27;rot&#x27;: &#123;&#x27;out_channels&#x27;:2, &#x27;num_conv&#x27;:1&#125;</span></span><br><span class="line">        <span class="comment"># &#125;</span></span><br><span class="line"></span><br><span class="line">        <span class="built_in">super</span>().__init__()</span><br><span class="line">        self.sep_head_dict = sep_head_dict</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 为center、center_z、dim、rot单独生成四层检测头</span></span><br><span class="line">        <span class="keyword">for</span> cur_name <span class="keyword">in</span> self.sep_head_dict:</span><br><span class="line">            output_channels = self.sep_head_dict[cur_name][<span class="string">&#x27;out_channels&#x27;</span>]</span><br><span class="line">            num_conv = self.sep_head_dict[cur_name][<span class="string">&#x27;num_conv&#x27;</span>]</span><br><span class="line"></span><br><span class="line">            fc_list = []</span><br><span class="line">            <span class="comment"># 按配置 num_conv = 1，下面的for循环不执行</span></span><br><span class="line">            <span class="keyword">for</span> k <span class="keyword">in</span> <span class="built_in">range</span>(num_conv - <span class="number">1</span>):</span><br><span class="line">                fc_list.append(nn.Sequential(</span><br><span class="line">                    nn.Conv2d(input_channels, input_channels, kernel_size=<span class="number">3</span>, stride=<span class="number">1</span>, padding=<span class="number">1</span>, bias=use_bias),</span><br><span class="line">                    nn.BatchNorm2d(input_channels),</span><br><span class="line">                    nn.ReLU()</span><br><span class="line">                ))</span><br><span class="line">            <span class="comment"># 每层实际就是一个卷积</span></span><br><span class="line">            fc_list.append(nn.Conv2d(input_channels, output_channels, kernel_size=<span class="number">3</span>, stride=<span class="number">1</span>, padding=<span class="number">1</span>, bias=<span class="literal">True</span>))</span><br><span class="line">            fc = nn.Sequential(*fc_list)</span><br><span class="line">            <span class="comment"># 这里是初始化卷积的初始参数？</span></span><br><span class="line">            <span class="keyword">if</span> <span class="string">&#x27;hm&#x27;</span> <span class="keyword">in</span> cur_name:</span><br><span class="line">                fc[-<span class="number">1</span>].bias.data.fill_(init_bias)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">for</span> m <span class="keyword">in</span> fc.modules():</span><br><span class="line">                    <span class="keyword">if</span> <span class="built_in">isinstance</span>(m, nn.Conv2d):</span><br><span class="line">                        nn.init.xavier_normal_(m.weight)</span><br><span class="line">                        <span class="keyword">if</span> <span class="built_in">hasattr</span>(m, <span class="string">&quot;bias&quot;</span>) <span class="keyword">and</span> m.bias <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">                            nn.init.constant_(m.bias, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">            self.__setattr__(cur_name, fc)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">forward</span>(<span class="params">self, x</span>):</span><br><span class="line">        ret_dict = &#123;&#125;</span><br><span class="line">        <span class="keyword">for</span> cur_name <span class="keyword">in</span> self.sep_head_dict:</span><br><span class="line">            ret_dict[cur_name] = self.__getattr__(cur_name)(x)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> ret_dict</span><br></pre></td></tr></table></figure></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ICP/" rel="tag"># ICP</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/21/02_gtsam%E5%85%B3%E4%BA%8Eimu%E9%A2%84%E7%A7%AF%E5%88%86%E5%AE%9E%E7%8E%B0%E6%8E%A2%E7%A9%B6/" rel="prev" title="gtsam关于imu预积分实现探究">
+      <i class="fa fa-chevron-left"></i> gtsam关于imu预积分实现探究
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2024/01/21/06-Lshape-Fitting/" rel="next" title="Efficient L-Shape Fitting for Vehicle Detection Using Laser Scanners 论文阅读与复现">
+      Efficient L-Shape Fitting for Vehicle Detection Using Laser Scanners 论文阅读与复现 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0-center-based-3d-object-detection-and-tracking"><span class="nav-number">1.</span> <span class="nav-text">论文阅读笔记
+Center-based 3D Object Detection and Tracking</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%9E%B6%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">网络架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E9%98%85%E8%AF%BB"><span class="nav-number">1.2.</span> <span class="nav-text">代码阅读</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9E%8B%E6%8E%A5%E5%8F%A3"><span class="nav-number">1.3.</span> <span class="nav-text">模型接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%82%B9%E4%BA%91%E4%BD%93%E7%B4%A0%E5%8C%96"><span class="nav-number">1.4.</span> <span class="nav-text">点云体素化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E5%B9%B2%E7%BD%91%E7%BB%9C"><span class="nav-number">1.5.</span> <span class="nav-text">主干网络</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A3%80%E6%B5%8B%E5%A4%B4"><span class="nav-number">1.6.</span> <span class="nav-text">检测头</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">南柯一梦</p>
+  <div class="site-description" itemprop="description">好记性不如烂笔头</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">南柯一梦</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
